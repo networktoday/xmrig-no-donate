@@ -151,10 +151,8 @@ echo "✅ Configuration updated:"
 echo "   Wallet: $WALLET_ADDRESS"
 echo "   Worker: $WORKER_NAME"
 echo ""
-read -p "Do you want to edit config.json manually? [y/N]: " EDIT_CONFIG
-if [[ "$EDIT_CONFIG" =~ ^[Yy]$ ]]; then
-    nano config.json
-fi
+echo "ℹ️  To edit config.json manually later:"
+echo "   cd $WORK_DIR && nano config.json"
 
 echo ""
 echo "=========================================="
