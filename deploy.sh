@@ -45,8 +45,15 @@ else
     echo "✅ Docker is already installed"
 fi
 
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+# Check if Docker Compose is installed and determine which command to use
+DOCKER_COMPOSE_CMD=""
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+    echo "✅ Docker Compose is already installed (docker-compose)"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+    echo "✅ Docker Compose is already installed (docker compose)"
+else
     if [ "$MACHINE" == "Mac" ]; then
         echo "❌ Docker Compose is not available!"
         echo "Docker Desktop for Mac includes Docker Compose by default."
@@ -55,10 +62,9 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
     else
         echo "❌ Docker Compose is not installed. Installing..."
         apt-get update && apt-get install -y docker-compose
+        DOCKER_COMPOSE_CMD="docker-compose"
         echo "✅ Docker Compose installed successfully"
     fi
-else
-    echo "✅ Docker Compose is already installed"
 fi
 
 # Check if Docker daemon is running
@@ -101,26 +107,26 @@ echo "=========================================="
 echo ""
 
 # Ask for wallet address
-read -p "Enter your Monero wallet address: " WALLET_ADDRESS
+read -p "Enter your Monero wallet address: " WALLET_ADDRESS </dev/tty
 while [[ -z "$WALLET_ADDRESS" ]]; do
     echo "❌ Wallet address cannot be empty!"
-    read -p "Enter your Monero wallet address: " WALLET_ADDRESS
+    read -p "Enter your Monero wallet address: " WALLET_ADDRESS </dev/tty
 done
 
 # Ask for worker name
-read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME
+read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME </dev/tty
 while [[ -z "$WORKER_NAME" ]]; do
     echo "❌ Worker name cannot be empty!"
-    read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME
+    read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME </dev/tty
 done
 
 # Ask if user wants to change pool (optional)
-read -p "Use default pool (pool.supportxmr.com:443)? [Y/n]: " USE_DEFAULT_POOL
+read -p "Use default pool (pool.supportxmr.com:443)? [Y/n]: " USE_DEFAULT_POOL </dev/tty
 USE_DEFAULT_POOL=${USE_DEFAULT_POOL:-Y}
 
 if [[ "$USE_DEFAULT_POOL" =~ ^[Nn]$ ]]; then
-    read -p "Enter pool URL (e.g., pool.hashvault.pro:443): " POOL_URL
-    read -p "Use TLS/SSL? [Y/n]: " USE_TLS
+    read -p "Enter pool URL (e.g., pool.hashvault.pro:443): " POOL_URL </dev/tty
+    read -p "Use TLS/SSL? [Y/n]: " USE_TLS </dev/tty
     USE_TLS=${USE_TLS:-Y}
     if [[ "$USE_TLS" =~ ^[Yy]$ ]]; then
         TLS_VALUE="true"
@@ -170,7 +176,7 @@ else
 fi
 
 # Start container
-docker-compose up -d
+$DOCKER_COMPOSE_CMD up -d
 
 echo ""
 echo "=========================================="
@@ -180,8 +186,8 @@ echo ""
 echo "Useful commands:"
 echo "  View logs:     docker logs -f xmrig-miner"
 echo "  Check status:  docker stats xmrig-miner"
-echo "  Stop miner:    cd $WORK_DIR && docker-compose down"
-echo "  Restart:       cd $WORK_DIR && docker-compose restart"
+echo "  Stop miner:    cd $WORK_DIR && $DOCKER_COMPOSE_CMD down"
+echo "  Restart:       cd $WORK_DIR && $DOCKER_COMPOSE_CMD restart"
 echo ""
 echo "Checking logs (press Ctrl+C to exit)..."
 sleep 3
