@@ -47,9 +47,79 @@ docker-compose logs -f
 
 ## One-Line Deploy (Alternative)
 
+### Linux
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/deploy.sh | bash
 ```
+
+**Requirements:**
+- Docker and Docker Compose installed
+- Bash shell (pre-installed on most Linux distributions)
+- curl (pre-installed on most Linux distributions)
+
+The script will automatically:
+- Install Docker/Docker Compose if not present (requires sudo)
+- Download configuration files
+- Prompt for wallet address and worker name
+- Start the miner
+
+### macOS
+
+```bash
+curl -sSL https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/deploy.sh | bash
+```
+
+**Requirements:**
+- **Docker Desktop for Mac** installed
+- Bash shell (pre-installed on macOS)
+- curl (pre-installed on macOS)
+
+**Installing Docker Desktop on macOS:**
+
+**Option 1: Direct download**
+1. Download from: https://www.docker.com/products/docker-desktop/
+2. Open the `.dmg` file
+3. Drag Docker to Applications
+4. Launch Docker Desktop from Applications
+5. Wait for Docker to start (whale icon in menu bar)
+
+**Option 2: Using Homebrew**
+```bash
+brew install --cask docker
+```
+
+**After Docker is installed:**
+```bash
+# Run the deployment script
+curl -sSL https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/deploy.sh | bash
+```
+
+**Note for Apple Silicon (M1/M2/M3):**
+- XMRig will run under Rosetta 2 (x86 emulation)
+- Performance may be lower than native Intel Macs
+- Consider adjusting CPU threads in config.json for optimal performance
+
+### Windows (PowerShell)
+
+**Option 1: Download and run**
+```powershell
+# Download the script
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/deploy.ps1" -OutFile "deploy.ps1"
+
+# Run the script
+powershell -ExecutionPolicy Bypass -File deploy.ps1
+```
+
+**Option 2: Direct execution**
+```powershell
+iwr -useb https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/deploy.ps1 | iex
+```
+
+**Requirements for Windows:**
+- Docker Desktop for Windows installed
+- WSL2 enabled (for Docker)
+- PowerShell (already included in Windows)
 
 ## Using Pre-Built Image
 

@@ -10,24 +10,68 @@ echo "XMRig No-Donate - Quick Deploy"
 echo "=========================================="
 echo ""
 
+# Detect OS
+OS="$(uname -s)"
+case "${OS}" in
+    Linux*)     MACHINE=Linux;;
+    Darwin*)    MACHINE=Mac;;
+    *)          MACHINE="UNKNOWN:${OS}"
+esac
+
+echo "Detected OS: $MACHINE"
+echo ""
+
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
-    echo "❌ Docker is not installed. Installing Docker..."
-    curl -fsSL https://get.docker.com | sh
-    systemctl start docker
-    systemctl enable docker
-    echo "✅ Docker installed successfully"
+    if [ "$MACHINE" == "Mac" ]; then
+        echo "❌ Docker is not installed!"
+        echo ""
+        echo "Please install Docker Desktop for Mac:"
+        echo "  1. Download from: https://www.docker.com/products/docker-desktop/"
+        echo "  2. Or use Homebrew: brew install --cask docker"
+        echo "  3. Launch Docker Desktop"
+        echo "  4. Wait for Docker to start (whale icon in menu bar)"
+        echo "  5. Run this script again"
+        echo ""
+        exit 1
+    else
+        echo "❌ Docker is not installed. Installing Docker..."
+        curl -fsSL https://get.docker.com | sh
+        systemctl start docker
+        systemctl enable docker
+        echo "✅ Docker installed successfully"
+    fi
 else
     echo "✅ Docker is already installed"
 fi
 
 # Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose is not installed. Installing..."
-    apt-get update && apt-get install -y docker-compose
-    echo "✅ Docker Compose installed successfully"
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    if [ "$MACHINE" == "Mac" ]; then
+        echo "❌ Docker Compose is not available!"
+        echo "Docker Desktop for Mac includes Docker Compose by default."
+        echo "Please make sure Docker Desktop is running."
+        exit 1
+    else
+        echo "❌ Docker Compose is not installed. Installing..."
+        apt-get update && apt-get install -y docker-compose
+        echo "✅ Docker Compose installed successfully"
+    fi
 else
     echo "✅ Docker Compose is already installed"
+fi
+
+# Check if Docker daemon is running
+if ! docker ps &> /dev/null; then
+    if [ "$MACHINE" == "Mac" ]; then
+        echo "❌ Docker is not running!"
+        echo "Please start Docker Desktop and wait for it to be ready (whale icon in menu bar)."
+        exit 1
+    else
+        echo "❌ Docker daemon is not running. Starting..."
+        systemctl start docker
+        sleep 3
+    fi
 fi
 
 # Create working directory
@@ -78,14 +122,24 @@ if [[ "$USE_DEFAULT_POOL" =~ ^[Nn]$ ]]; then
     else
         TLS_VALUE="false"
     fi
-    # Update pool URL and TLS
-    sed -i "s|\"url\": \".*\"|\"url\": \"$POOL_URL\"|" config.json
-    sed -i "s|\"tls\": true|\"tls\": $TLS_VALUE|" config.json
+    # Update pool URL and TLS (macOS requires empty string after -i)
+    if [ "$MACHINE" == "Mac" ]; then
+        sed -i '' "s|\"url\": \".*\"|\"url\": \"$POOL_URL\"|" config.json
+        sed -i '' "s|\"tls\": true|\"tls\": $TLS_VALUE|" config.json
+    else
+        sed -i "s|\"url\": \".*\"|\"url\": \"$POOL_URL\"|" config.json
+        sed -i "s|\"tls\": true|\"tls\": $TLS_VALUE|" config.json
+    fi
 fi
 
-# Update wallet and worker name in config.json
-sed -i "s|\"user\": \".*\"|\"user\": \"$WALLET_ADDRESS\"|" config.json
-sed -i "s|\"pass\": \".*\"|\"pass\": \"$WORKER_NAME\"|" config.json
+# Update wallet and worker name in config.json (macOS requires empty string after -i)
+if [ "$MACHINE" == "Mac" ]; then
+    sed -i '' "s|\"user\": \".*\"|\"user\": \"$WALLET_ADDRESS\"|" config.json
+    sed -i '' "s|\"pass\": \".*\"|\"pass\": \"$WORKER_NAME\"|" config.json
+else
+    sed -i "s|\"user\": \".*\"|\"user\": \"$WALLET_ADDRESS\"|" config.json
+    sed -i "s|\"pass\": \".*\"|\"pass\": \"$WORKER_NAME\"|" config.json
+fi
 
 echo ""
 echo "✅ Configuration updated:"
@@ -103,9 +157,14 @@ echo "Starting XMRig miner..."
 echo "=========================================="
 echo ""
 
-# Edit docker-compose to use pre-built image
-sed -i 's|# image:|image:|' docker-compose.yml
-sed -i 's|build: .|# build: .|' docker-compose.yml
+# Edit docker-compose to use pre-built image (macOS requires empty string after -i)
+if [ "$MACHINE" == "Mac" ]; then
+    sed -i '' 's|# image:|image:|' docker-compose.yml
+    sed -i '' 's|build: .|# build: .|' docker-compose.yml
+else
+    sed -i 's|# image:|image:|' docker-compose.yml
+    sed -i 's|build: .|# build: .|' docker-compose.yml
+fi
 
 # Start container
 docker-compose up -d
