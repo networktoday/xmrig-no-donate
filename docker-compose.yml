@@ -1,0 +1,25 @@
+services:
+  xmrig-miner:
+    # Use pre-built image from GitHub Container Registry
+    # image: ghcr.io/networktoday/xmrig-no-donate:latest
+
+    # OR build locally from Dockerfile
+    build: .
+
+    container_name: xmrig-miner
+    restart: unless-stopped
+    network_mode: bridge
+
+    # Mount your config file (edit config.json before starting)
+    volumes:
+      - ./config.json:/home/mining/config.json:ro
+
+    # Override default command to use config file
+    command: ["--config=/home/mining/config.json"]
+
+    # Optional: Limit CPU usage (uncomment to enable)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '4.0'
+    #       memory: 4G
