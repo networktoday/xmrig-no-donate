@@ -50,18 +50,52 @@ echo "=========================================="
 echo "⚠️  CONFIGURATION REQUIRED"
 echo "=========================================="
 echo ""
-echo "Please edit the configuration file:"
-echo "  nano $WORK_DIR/config.json"
-echo ""
-echo "Required changes:"
-echo "  1. Set your Monero wallet address in 'user' field"
-echo "  2. Set your worker name in 'pass' field"
-echo "  3. Optionally change pool URL"
-echo ""
-read -p "Press Enter to open the editor..."
 
-# Open editor
-nano config.json
+# Ask for wallet address
+read -p "Enter your Monero wallet address: " WALLET_ADDRESS
+while [[ -z "$WALLET_ADDRESS" ]]; do
+    echo "❌ Wallet address cannot be empty!"
+    read -p "Enter your Monero wallet address: " WALLET_ADDRESS
+done
+
+# Ask for worker name
+read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME
+while [[ -z "$WORKER_NAME" ]]; do
+    echo "❌ Worker name cannot be empty!"
+    read -p "Enter worker name (e.g., WORKER001): " WORKER_NAME
+done
+
+# Ask if user wants to change pool (optional)
+read -p "Use default pool (pool.supportxmr.com:443)? [Y/n]: " USE_DEFAULT_POOL
+USE_DEFAULT_POOL=${USE_DEFAULT_POOL:-Y}
+
+if [[ "$USE_DEFAULT_POOL" =~ ^[Nn]$ ]]; then
+    read -p "Enter pool URL (e.g., pool.hashvault.pro:443): " POOL_URL
+    read -p "Use TLS/SSL? [Y/n]: " USE_TLS
+    USE_TLS=${USE_TLS:-Y}
+    if [[ "$USE_TLS" =~ ^[Yy]$ ]]; then
+        TLS_VALUE="true"
+    else
+        TLS_VALUE="false"
+    fi
+    # Update pool URL and TLS
+    sed -i "s|\"url\": \".*\"|\"url\": \"$POOL_URL\"|" config.json
+    sed -i "s|\"tls\": true|\"tls\": $TLS_VALUE|" config.json
+fi
+
+# Update wallet and worker name in config.json
+sed -i "s|\"user\": \".*\"|\"user\": \"$WALLET_ADDRESS\"|" config.json
+sed -i "s|\"pass\": \".*\"|\"pass\": \"$WORKER_NAME\"|" config.json
+
+echo ""
+echo "✅ Configuration updated:"
+echo "   Wallet: $WALLET_ADDRESS"
+echo "   Worker: $WORKER_NAME"
+echo ""
+read -p "Do you want to edit config.json manually? [y/N]: " EDIT_CONFIG
+if [[ "$EDIT_CONFIG" =~ ^[Yy]$ ]]; then
+    nano config.json
+fi
 
 echo ""
 echo "=========================================="
