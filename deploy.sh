@@ -166,16 +166,29 @@ echo "Starting XMRig miner..."
 echo "=========================================="
 echo ""
 
-# Edit docker-compose to use pre-built image (macOS requires empty string after -i)
-if [ "$MACHINE" == "Mac" ]; then
-    sed -i '' 's|# image:|image:|' docker-compose.yml
-    sed -i '' 's|build: .|# build: .|' docker-compose.yml
+# Try to use pre-built image, fallback to local build if not available
+echo "Checking if pre-built image is available..."
+if docker pull ghcr.io/networktoday/xmrig-no-donate:latest &> /dev/null; then
+    echo "✅ Using pre-built image from GitHub Container Registry"
+    # Edit docker-compose to use pre-built image (macOS requires empty string after -i)
+    if [ "$MACHINE" == "Mac" ]; then
+        sed -i '' 's|# image:|image:|' docker-compose.yml
+        sed -i '' 's|build: .|# build: .|' docker-compose.yml
+    else
+        sed -i 's|# image:|image:|' docker-compose.yml
+        sed -i 's|build: .|# build: .|' docker-compose.yml
+    fi
 else
-    sed -i 's|# image:|image:|' docker-compose.yml
-    sed -i 's|build: .|# build: .|' docker-compose.yml
+    echo "⚠️  Pre-built image not available, will build locally"
+    echo "⚠️  Note: This requires the Dockerfile to be present"
+    echo ""
+    echo "Downloading Dockerfile..."
+    curl -sSL https://raw.githubusercontent.com/networktoday/xmrig-no-donate/main/Dockerfile -o Dockerfile
 fi
 
 # Start container
+echo ""
+echo "Starting container (this may take several minutes if building locally)..."
 $DOCKER_COMPOSE_CMD up -d
 
 echo ""
