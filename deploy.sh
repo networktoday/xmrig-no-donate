@@ -75,7 +75,12 @@ if ! docker ps &> /dev/null; then
 fi
 
 # Create working directory
-WORK_DIR="/opt/xmrig-miner"
+if [ "$MACHINE" == "Mac" ]; then
+    WORK_DIR="$HOME/xmrig-miner"
+else
+    WORK_DIR="/opt/xmrig-miner"
+fi
+
 echo ""
 echo "Creating working directory: $WORK_DIR"
 mkdir -p $WORK_DIR
